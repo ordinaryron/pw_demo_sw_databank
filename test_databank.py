@@ -24,12 +24,12 @@ def special_snowflakes(the_list):
 
 def test_databank(page: Page):
     page.goto(databank_url)
-    show_more_button = page.locator("#ref-1-24 > div.bound.vertical.peeking.quick-info-modal-disabled > div.peek > div > a > span.label")
+    show_more_button = page.get_by_text('Show More')
     # In order to get all the databank entries, the Show More button has to be clicked repeatedly until all the entries are shown. I wouldn't have designed it that way,
     # but that's the way it is.
     while show_more_button.is_visible():
         show_more_button.click()
-        time.sleep(10)
+        time.sleep(10) # Providing time for all elements to load before clicking again
     
     links_list = page.locator("a").evaluate_all("(elements) => elements.map(el => el.href)")
     links_list_dedup = list(dict.fromkeys(links_list))
