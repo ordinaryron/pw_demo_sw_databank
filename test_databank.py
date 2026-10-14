@@ -1,4 +1,5 @@
 from playwright.sync_api import Page, sync_playwright
+import pytest
 
 # The Star Wars Databank at starwars.com is a single page with some 2500+ entries to various Star Wars "things." Want to learn about Luke Skywalker or Glup Shitto? They're there
 # in the databank. Problem is, the databank only displays a handful of entries at one time, with a "Show More" button that displays 18 new entries each time it's clicked. 
@@ -45,13 +46,21 @@ def test_databank(page: Page):
         context = browser.new_context()
         page = context.new_page()
 
-        # Open the databank page.
-        page.goto(databank_url, wait_until="load")
+        # Open the databank page. Make sure we get a good load by checking the response.
+        response = page.goto(databank_url, wait_until="load")
+        if response is None:
+            pytest.fail("Critical: Page failed to load")
+        if not response.ok:
+            pytest.fail(f"Critical: Page loaded with error status: {response.status}")
 
         # Identify the "Show More" button. page_by_text isn't the best way to find a locator, but get_by_role doesn't consistently work here, presumably due to the flakiness of the
         # page. 
         show_more_label = page.get_by_text("Show More")
         loading_label = page.get_by_text("Loading...")
+
+        # If one label or the other isn't there, die immediately.
+        if not (show_more_label.is_visible()) or (loading_label.is_visible()):
+            pytest.fail("Critical: The 'Show More' button is not present")
 
         # When the "Loading..." label switches to the "Show More" label, the button is ready to click. We click it until neither label is visible, which means all entries are
         # displayed.
